@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planta&Scan</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#1a9e6a; --green-light:#22c47f; --green-dark:#0d6b47;
+  --green-bg:#eaf7f1; --cream:#f8f5ef; --cream-dark:#ede9e0;
+  --brown:#1c1510; --muted:#7a7168; --warn:#e0780d; --danger:#d63b3b;
+  --white:#ffffff; --card-shadow:0 2px 12px rgba(26,20,12,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:#d8d4cc;display:flex;justify-content:center;min-height:100vh;padding:20px}
+.device{width:393px;height:852px;background:var(--cream);border-radius:48px;overflow:hidden;position:relative;box-shadow:0 40px 100px rgba(0,0,0,.45);border:10px solid #111}
+.screen{width:100%;height:100%;position:relative;overflow:hidden}
+.page{position:absolute;inset:0;display:none;flex-direction:column}
+.page.active{display:flex}
+.scroll{overflow-y:auto;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.fd{font-family:'Fraunces',serif}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:99px;font-size:11px;font-weight:600}
+.pill-g{background:var(--green-bg);color:var(--green-dark)}
+.pill-w{background:#fff3e6;color:var(--warn)}
+.pill-r{background:#fef0f0;color:var(--danger)}
+.card{background:var(--white);border-radius:20px;box-shadow:var(--card-shadow);overflow:hidden}
+.bnav{flex-shrink:0;height:76px;background:var(--white);border-top:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-around;position:relative}
+.nb{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:#b0aa9f;padding:8px 10px;transition:color .2s;font-family:'DM Sans',sans-serif}
+.nb.on{color:var(--green)}
+.nb span{font-size:10px;font-weight:500}
+.fab{position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:56px;height:56px;background:var(--green-light);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(34,196,127,.5),0 0 0 6px rgba(34,196,127,.15);transition:transform .15s}
+.fab:active{transform:translateX(-50%) scale(.94)}
+@keyframes scanMove{0%,100%{top:4px}50%{top:calc(100% - 6px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes popIn{0%{transform:scale(.85);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes pulse2{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(.97)}}
+.a1{animation:slideUp .4s ease forwards}
+.a2{animation:slideUp .4s .08s ease both}
+.a3{animation:slideUp .4s .16s ease both}
+.a4{animation:slideUp .4s .24s ease both}
+.pop{animation:popIn .5s cubic-bezier(.34,1.56,.64,1) forwards}
+/* Offline badge */
+.offline-badge{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#e0780d;color:white;font-size:11px;font-weight:600;padding:6px 16px;border-radius:99px;z-index:9999;display:none}
+</style>
+</head>
+<body>
+<div class="device">
+<div id="offlineBadge" class="offline-badge">📵 Modo Offline</div>
+<div class="screen">
+
+<!-- ═══════════ HOME ═══════════ -->
+<div id="p-home" class="page active scroll" style="background:var(--cream);padding-bottom:80px">
+  <div style="position:relative;height:260px;flex-shrink:0;overflow:hidden">
+    <img src="https://images.unsplash.com/photo-1545241047-6083a3684587?w=900&q=85" style="width:100%;height:100%;object-fit:cover">
+    <div style="position:absolute;inset:0;background:linear-gradient(170deg,rgba(10,40,22,.15) 0%,var(--cream) 92%)"></div>
+    <div style="position:absolute;top:18px;left:20px;display:flex;align-items:center;gap:8px">
+      <div style="width:32px;height:32px;background:var(--green-light);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(34,196,127,.4)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg>
+      </div>
+      <span class="fd" style="font-size:16px;font-weight:600;color:var(--brown)">Planta<span style="color:var(--green)">&</span>Scan</span>
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 20px 16px" class="a1">
+      <h1 class="fd" style="font-size:30px;font-weight:700;color:var(--brown);line-height:1.1">Identifique suas<br><em style="color:var(--green)">plantas</em> com IA</h1>
+      <p style="font-size:13px;color:var(--muted);margin-top:5px">Foto → espécie, saúde e cuidados em segundos.</p>
+    </div>
+  </div>
+
+  <!-- SCAN CTA - destaque principal -->
+  <div style="padding:0 16px;margin-top:14px" class="a2">
+    <button onclick="goTo('scan')" style="width:100%;background:var(--green-light);border:none;border-radius:18px;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 10px 30px rgba(34,196,127,.45)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:48px;height:48px;background:rgba(255,255,255,.22);border-radius:14px;display:flex;align-items:center;justify-content:center">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="4"/></svg>
+        </div>
+        <div style="text-align:left">
+          <span class="fd" style="display:block;font-size:18px;font-weight:700;color:white">Escanear Planta</span>
+          <span style="display:block;font-size:12px;color:rgba(255,255,255,.8)">IA identifica em segundos • grátis</span>
+        </div>
+      </div>
+      <div style="width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </button>
+  </div>
+
+  <!-- Diagnóstico rápido CTA -->
+  <div style="padding:10px 16px 0" class="a2">
+    <button onclick="goTo('scan');setTimeout(()=>setMode('diagnose'),300)" style="width:100%;background:var(--white);border:1.5px solid rgba(214,59,59,.25);border-radius:16px;padding:13px 18px;display:flex;align-items:center;gap:13px;cursor:pointer">
+      <div style="width:40px;height:40px;background:#fef0f0;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div style="text-align:left;flex:1">
+        <span class="fd" style="display:block;font-size:14px;font-weight:600;color:var(--brown)">Diagnosticar Doença</span>
+        <span style="font-size:12px;color:var(--muted)">Foto → problemas detectados pela IA</span>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+
+  <!-- Dica do dia -->
+  <div style="padding:16px 16px 0" class="a3">
+    <div id="tipCard" onclick="nextTip()" style="background:linear-gradient(135deg,#1a5c3a,#0d9e6a);border-radius:20px;padding:18px;cursor:pointer;overflow:hidden;position:relative">
+      <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.05);border-radius:50%"></div>
+      <div style="position:absolute;bottom:-20px;right:20px;width:70px;height:70px;background:rgba(255,255,255,.04);border-radius:50%"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;position:relative;z-index:1">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <span id="tipEmoji" style="font-size:18px">💧</span>
+            <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.8px">Dica do Dia</span>
+          </div>
+          <p id="tipText" class="fd" style="font-size:15px;font-weight:600;color:white;line-height:1.3;max-width:210px">Regue cedo pela manhã para evitar fungos nas folhas</p>
+          <p id="tipSub" style="font-size:11px;color:rgba(255,255,255,.55);margin-top:5px">Toque para próxima dica</p>
+        </div>
+        <div style="width:46px;height:46px;background:rgba(255,255,255,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px" id="tipIcon">💧</div>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:12px;position:relative;z-index:1" id="tipDots">
+        <div style="width:20px;height:4px;background:rgba(255,255,255,.7);border-radius:2px;transition:all .3s"></div>
+        <div style="width:6px;height:4px;background:rgba(255,255,255,.3);border-radius:2px;transition:all .3s"></div>
+        <div style="width:6px;height:4px;background:rgba(255,255,255,.3);border-radius:2px;transition:all .3s"></div>
+        <div style="width:6px;height:4px;background:rgba(255,255,255,.3);border-radius:2px;transition:all .3s"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plantas recentes -->
+  <div style="padding:20px 16px 0" class="a4">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h2 class="fd" style="font-size:20px;font-weight:600;color:var(--brown)">Plantas Recentes</h2>
+      <button onclick="goTo('garden')" style="font-size:13px;color:var(--green);font-weight:600;background:none;border:none;cursor:pointer">Ver todas →</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div onclick="showPlantResult({name:'Monstera',sci:'Monstera deliciosa',score:85,foto:'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400&q=80'})" class="card" style="cursor:pointer">
+        <div style="height:120px;overflow:hidden;position:relative"><img src="https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400&q=80" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--green-dark)">85●</div></div>
+        <div style="padding:10px 12px 12px"><div class="fd" style="font-size:13px;font-weight:700;color:var(--brown)">Monstera</div><div style="font-size:10px;color:var(--muted);font-style:italic">Costela-de-Adão</div><div style="margin-top:6px"><span class="pill pill-w" style="font-size:10px;padding:3px 8px">💧 Regar</span></div></div>
+      </div>
+      <div onclick="showPlantResult({name:'Suculenta',sci:'Echeveria elegans',score:92,foto:'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400&q=80'})" class="card" style="cursor:pointer">
+        <div style="height:120px;overflow:hidden;position:relative"><img src="https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400&q=80" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--green-dark)">92●</div></div>
+        <div style="padding:10px 12px 12px"><div class="fd" style="font-size:13px;font-weight:700;color:var(--brown)">Suculenta</div><div style="font-size:10px;color:var(--muted);font-style:italic">Rosa-de-Pedra</div><div style="margin-top:6px"><span class="pill pill-g" style="font-size:10px;padding:3px 8px">✓ Saudável</span></div></div>
+      </div>
+      <div onclick="showPlantResult({name:'Samambaia',sci:'Nephrolepis exaltata',score:58,foto:'https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=400&q=80'})" class="card" style="grid-column:1/-1;display:flex;cursor:pointer">
+        <div style="width:100px;flex-shrink:0;overflow:hidden"><img src="https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=300&q=80" style="width:100%;height:100%;object-fit:cover"></div>
+        <div style="padding:14px;flex:1">
+          <div class="fd" style="font-size:15px;font-weight:600;color:var(--brown)">Samambaia</div>
+          <div style="font-size:10px;color:var(--muted);font-style:italic;margin-bottom:8px">Avenca-grande (Nordeste)</div>
+          <div style="display:flex;gap:5px"><span class="pill pill-w" style="font-size:10px;padding:3px 8px">💧</span><span class="pill pill-w" style="font-size:10px;padding:3px 8px">☀</span><span class="pill pill-r" style="font-size:10px;padding:3px 8px">⚠ 58</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bnav" style="margin-top:20px">
+    <button class="nb on" onclick="goTo('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Início</span></button>
+    <button class="nb" onclick="goTo('garden')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg><span>Jardim</span></button>
+    <button class="fab" onclick="goTo('scan')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="4"/></svg></button>
+    <div style="width:48px"></div>
+    <button class="nb" onclick="goTo('catalog')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Catálogo</span></button>
+    <button class="nb" onclick="goTo('profile')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ═══════════ SCAN (IA REAL) ═══════════ -->
+<div id="p-scan" class="page" style="background:#060e08;flex-direction:column">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button onclick="goTo('home')" style="width:40px;height:40px;background:rgba(255,255,255,.1);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="fd" id="scanTitle" style="font-size:18px;font-weight:600;color:white">Identificar Planta</span>
+    </div>
+    <!-- Mode toggle -->
+    <div style="display:flex;gap:6px">
+      <button id="modeIdentify" onclick="setMode('identify')" style="background:var(--green-light);color:white;border:none;border-radius:99px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer">Identificar</button>
+      <button id="modeDiagnose" onclick="setMode('diagnose')" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);border:none;border-radius:99px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer">Diagnosticar</button>
+    </div>
+  </div>
+
+  <!-- Camera area -->
+  <div style="flex:1;margin:0 16px 8px;background:#0d1e10;border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative" id="camBox">
+    <div id="camPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:10px;z-index:1;text-align:center;padding:20px">
+      <div style="width:72px;height:72px;background:rgba(34,196,127,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:pulse2 2s infinite">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="rgba(34,196,127,.7)" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <p style="color:rgba(255,255,255,.35);font-size:13px">Aponte para uma planta<br><span style="font-size:11px;color:rgba(255,255,255,.2)">ou envie da galeria</span></p>
+    </div>
+    <!-- corner brackets -->
+    <div style="position:absolute;inset:20px;pointer-events:none">
+      <div style="position:absolute;top:0;left:0;width:28px;height:28px;border-top:2.5px solid rgba(34,196,127,.7);border-left:2.5px solid rgba(34,196,127,.7);border-radius:6px 0 0 0"></div>
+      <div style="position:absolute;top:0;right:0;width:28px;height:28px;border-top:2.5px solid rgba(34,196,127,.7);border-right:2.5px solid rgba(34,196,127,.7);border-radius:0 6px 0 0"></div>
+      <div style="position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:2.5px solid rgba(34,196,127,.7);border-left:2.5px solid rgba(34,196,127,.7);border-radius:0 0 0 6px"></div>
+      <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:2.5px solid rgba(34,196,127,.7);border-right:2.5px solid rgba(34,196,127,.7);border-radius:0 0 6px 0"></div>
+      <div id="scanLine" style="display:none;position:absolute;left:0;right:0;height:3px;background:linear-gradient(to right,transparent,rgba(34,196,127,.9),transparent);border-radius:3px;animation:scanMove 2s ease-in-out infinite;box-shadow:0 0 12px rgba(34,196,127,.6)"></div>
+    </div>
+    <!-- AI analyzing overlay -->
+    <div id="scanOverlay" style="display:none;position:absolute;inset:0;background:rgba(6,14,8,.8);flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:10;border-radius:24px">
+      <div style="width:64px;height:64px;border-radius:50%;border:3px solid rgba(34,196,127,.3);border-top-color:var(--green-light);animation:spin 1s linear infinite"></div>
+      <div style="background:rgba(255,255,255,.96);border-radius:16px;padding:16px 24px;text-align:center;max-width:260px">
+        <p class="fd" id="aiStatusText" style="font-size:15px;font-weight:600;color:var(--brown);margin:0">Enviando para IA...</p>
+        <p id="aiStatusSub" style="font-size:11px;color:var(--muted);margin:4px 0 0">Claude está analisando a imagem</p>
+        <div style="height:3px;background:#eee;border-radius:2px;margin-top:10px;overflow:hidden"><div id="aiProgress" style="height:100%;width:0%;background:var(--green-light);border-radius:2px;transition:width .4s ease"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <p style="text-align:center;color:rgba(255,255,255,.22);font-size:11px;padding:4px 0" id="scanHint">Centralize a planta no quadro</p>
+
+  <div style="display:flex;align-items:center;justify-content:space-around;padding:10px 16px 22px;flex-shrink:0">
+    <button onclick="openGallery()" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(255,255,255,.07);border:none;border-radius:14px;padding:12px 18px;cursor:pointer;color:rgba(255,255,255,.5)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span style="font-size:11px">Galeria</span>
+    </button>
+    <button onclick="captureAndAnalyze()" style="width:72px;height:72px;background:var(--green-light);border:5px solid rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 0 8px rgba(34,196,127,.18)">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/></svg>
+    </button>
+    <button onclick="showAITips()" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(255,255,255,.07);border:none;border-radius:14px;padding:12px 18px;cursor:pointer;color:rgba(255,255,255,.5)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span style="font-size:11px">IA Dicas</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ RESULT ═══════════ -->
+<div id="p-result" class="page scroll" style="background:var(--cream);padding-bottom:80px">
+  <div id="resultContent"></div>
+  <nav class="bnav">
+    <button class="nb" onclick="goTo('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Início</span></button>
+    <button class="nb" onclick="goTo('garden')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg><span>Jardim</span></button>
+    <button class="fab" onclick="goTo('scan')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="4"/></svg></button>
+    <div style="width:48px"></div>
+    <button class="nb" onclick="goTo('catalog')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Catálogo</span></button>
+    <button class="nb" onclick="goTo('profile')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ═══════════ GARDEN ═══════════ -->
+<div id="p-garden" class="page scroll" style="background:var(--cream);padding-bottom:80px">
+  <div style="padding:22px 16px 14px;background:var(--white);border-bottom:1px solid var(--cream-dark);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div><h1 class="fd" style="font-size:26px;font-weight:700;color:var(--brown);margin:0">Meu Jardim</h1><p style="font-size:13px;color:var(--muted);margin:3px 0 0" id="gardenCount">3 plantas</p></div>
+    <button onclick="goTo('scan')" style="width:42px;height:42px;background:var(--green-light);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(34,196,127,.4)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  <!-- Watering alerts -->
+  <div style="margin:14px 16px 0;background:#fffbf5;border:1.5px solid rgba(224,120,13,.2);border-radius:16px;padding:14px">
+    <div style="font-size:12px;font-weight:600;color:var(--brown);display:flex;align-items:center;gap:7px;margin-bottom:10px">
+      <div style="width:28px;height:28px;background:#fff3e6;border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+      Calculadora de Rega
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <select id="soilType" style="flex:1;padding:8px 10px;border:1.5px solid var(--cream-dark);border-radius:10px;font-size:12px;background:var(--white);color:var(--brown);outline:none">
+        <option value="2">Solo arenoso (seca rápido)</option>
+        <option value="3" selected>Solo comum</option>
+        <option value="5">Solo argiloso (retém água)</option>
+        <option value="7">Substrato para suculentas</option>
+      </select>
+      <button onclick="calcWatering()" style="background:var(--green-light);color:white;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer">Calcular</button>
+    </div>
+    <div id="waterCalcResult" style="font-size:12px;color:var(--muted);padding:8px;background:var(--cream);border-radius:10px">Selecione o tipo de solo e calcule a frequência ideal ☝️</div>
+    <div style="border-top:1px solid rgba(224,120,13,.1);margin-top:10px;padding-top:10px">
+      <div style="font-size:11px;font-weight:600;color:var(--brown);margin-bottom:7px">Precisa regar hoje:</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0">
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:10px;overflow:hidden"><img src="https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=100&q=70" style="width:100%;height:100%;object-fit:cover"></div><span class="fd" style="font-size:13px;font-weight:600;color:var(--brown)">Monstera</span></div>
+        <button id="w1" onclick="markWatered('w1')" style="background:var(--green-light);color:white;border:none;border-radius:10px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer">Reguei ✓</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-top:1px solid rgba(224,120,13,.1)">
+        <div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:10px;overflow:hidden"><img src="https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=100&q=70" style="width:100%;height:100%;object-fit:cover"></div><span class="fd" style="font-size:13px;font-weight:600;color:var(--brown)">Samambaia</span></div>
+        <button id="w2" onclick="markWatered('w2')" style="background:var(--green-light);color:white;border:none;border-radius:10px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer">Reguei ✓</button>
+      </div>
+    </div>
+  </div>
+  <!-- Plant grid with diary button -->
+  <div style="padding:14px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px" id="gardenGrid">
+    <div class="card" style="cursor:pointer" onclick="openDiary('monstera')">
+      <div style="height:110px;overflow:hidden;position:relative"><img src="https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400&q=80" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--green-dark)">85●</div><div style="position:absolute;bottom:6px;right:6px;background:rgba(13,107,71,.85);border-radius:7px;padding:2px 7px;font-size:9px;color:white">📔 Diário</div></div>
+      <div style="padding:10px 11px 12px"><div class="fd" style="font-size:13px;font-weight:700;color:var(--brown)">Monstera</div><div style="font-size:10px;color:var(--muted);font-style:italic">Costela-de-Adão</div><div style="margin-top:5px"><span class="pill pill-w" style="font-size:10px;padding:3px 7px">💧 Regar</span></div></div>
+    </div>
+    <div class="card" style="cursor:pointer" onclick="openDiary('echeveria')">
+      <div style="height:110px;overflow:hidden;position:relative"><img src="https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400&q=80" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--green-dark)">92●</div><div style="position:absolute;bottom:6px;right:6px;background:rgba(13,107,71,.85);border-radius:7px;padding:2px 7px;font-size:9px;color:white">📔 Diário</div></div>
+      <div style="padding:10px 11px 12px"><div class="fd" style="font-size:13px;font-weight:700;color:var(--brown)">Suculenta</div><div style="font-size:10px;color:var(--muted);font-style:italic">Rosa-de-Pedra</div><div style="margin-top:5px"><span class="pill pill-g" style="font-size:10px;padding:3px 7px">✓ OK</span></div></div>
+    </div>
+    <div class="card" style="cursor:pointer" onclick="openDiary('samambaia')">
+      <div style="height:110px;overflow:hidden;position:relative"><img src="https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=400&q=80" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:var(--warn)">58●</div><div style="position:absolute;bottom:6px;right:6px;background:rgba(13,107,71,.85);border-radius:7px;padding:2px 7px;font-size:9px;color:white">📔 Diário</div></div>
+      <div style="padding:10px 11px 12px"><div class="fd" style="font-size:13px;font-weight:700;color:var(--brown)">Samambaia</div><div style="font-size:10px;color:var(--muted);font-style:italic">Avenca-grande</div><div style="margin-top:5px;display:flex;gap:4px"><span class="pill pill-w" style="font-size:10px;padding:3px 7px">💧</span><span class="pill pill-w" style="font-size:10px;padding:3px 7px">☀</span></div></div>
+    </div>
+  </div>
+  <nav class="bnav" style="margin-top:20px">
+    <button class="nb" onclick="goTo('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Início</span></button>
+    <button class="nb on" onclick="goTo('garden')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg><span>Jardim</span></button>
+    <button class="fab" onclick="goTo('scan')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="4"/></svg></button>
+    <div style="width:48px"></div>
+    <button class="nb" onclick="goTo('catalog')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Catálogo</span></button>
+    <button class="nb" onclick="goTo('profile')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ═══════════ DIARY ═══════════ -->
+<div id="p-diary" class="page scroll" style="background:var(--cream);padding-bottom:80px">
+  <div style="display:flex;align-items:center;gap:12px;padding:20px 16px 14px;flex-shrink:0">
+    <button onclick="goTo('garden')" style="width:40px;height:40px;background:var(--white);border:1px solid var(--cream-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--brown)" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
+    <div><h1 class="fd" id="diaryTitle" style="font-size:22px;font-weight:700;color:var(--brown);margin:0">Diário da Planta</h1><p style="font-size:12px;color:var(--muted)">Acompanhe a evolução ao longo do tempo</p></div>
+  </div>
+  <div id="diaryContent" style="padding:0 16px"></div>
+  <nav class="bnav">
+    <button class="nb" onclick="goTo('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Início</span></button>
+    <button class="nb on" onclick="goTo('garden')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg><span>Jardim</span></button>
+    <button class="fab" onclick="goTo('scan')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="4"/></svg></button>
+    <div style="width:48px"></div>
+    <button class="nb" onclick="goTo('catalog')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Catálogo</span></button>
+    <button class="nb" onclick="goTo('profile')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ═══════════ CATALOG ═══════════ -->
+<div id="p-catalog" class="page scroll" style="background:var(--cream);padding-bottom:80px">
+  <div style="padding:22px 16px 0">
+    <h1 class="fd" style="font-size:28px;font-weight:700;color:var(--brown);margin:0">Catálogo</h1>
+    <p style="font-size:13px;color:var(--muted);margin:4px 0 14px">Conheça as plantas antes de escanear</p>
+    <div style="position:relative;margin-bottom:12px">
+      <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="catalogSearch" oninput="filterCatalog(this.value)" type="text" placeholder="Buscar planta ou nome regional..." style="width:100%;padding:12px 16px 12px 38px;border:1.5px solid var(--cream-dark);border-radius:14px;font-size:13px;color:var(--brown);background:var(--white);outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box">
+    </div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none">
+      <button onclick="filterCategory('todas')" class="cat-btn" style="flex-shrink:0;padding:7px 14px;border-radius:99px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:var(--green-light);color:white">Todas</button>
+      <button onclick="filterCategory('interior')" class="cat-btn" style="flex-shrink:0;padding:7px 14px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid var(--cream-dark);cursor:pointer;background:var(--white);color:var(--muted)">🏠 Interior</button>
+      <button onclick="filterCategory('exterior')" class="cat-btn" style="flex-shrink:0;padding:7px 14px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid var(--cream-dark);cursor:pointer;background:var(--white);color:var(--muted)">🌳 Exterior</button>
+      <button onclick="filterCategory('suculenta')" class="cat-btn" style="flex-shrink:0;padding:7px 14px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid var(--cream-dark);cursor:pointer;background:var(--white);color:var(--muted)">🌵 Suculentas</button>
+      <button onclick="filterCategory('florida')" class="cat-btn" style="flex-shrink:0;padding:7px 14px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid var(--cream-dark);cursor:pointer;background:var(--white);color:var(--muted)">🌸 Floridas</button>
+      <button onclick="filterCategory('aromatica')" class="cat-btn" style="flex-shrink:0;padding:7px 14px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid var(--cream-dark);cursor:pointer;background:var(--white);color:var(--muted)">🌿 Aromáticas</button>
+    </div>
+  </div>
+  <div style="margin:0 16px 14px">
+    <div style="background:linear-gradient(135deg,#0a3322,#1a7a50);border-radius:16px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
+      <div><p class="fd" style="font-size:14px;font-weight:700;color:white;margin:0">Não sabe qual é?</p><p style="font-size:11px;color:rgba(255,255,255,.65);margin:2px 0 0">IA identifica pela foto em segundos</p></div>
+      <button onclick="goTo('scan')" style="background:var(--green-light);color:white;border:none;border-radius:12px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap" class="fd">📷 Escanear</button>
+    </div>
+  </div>
+  <div id="catalogGrid" style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+  <nav class="bnav" style="margin-top:20px">
+    <button class="nb" onclick="goTo('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Início</span></button>
+    <button class="nb" onclick="goTo('garden')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg><span>Jardim</span></button>
+    <button class="fab" onclick="goTo('scan')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="4"/></svg></button>
+    <div style="width:48px"></div>
+    <button class="nb on" onclick="goTo('catalog')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Catálogo</span></button>
+    <button class="nb" onclick="goTo('profile')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ═══════════ COMMUNITY ═══════════ -->
+<div id="p-community" class="page scroll" style="background:var(--cream);padding-bottom:80px">
+  <div style="padding:22px 16px 14px">
+    <h1 class="fd" style="font-size:26px;font-weight:700;color:var(--brown);margin:0">Comunidade</h1>
+    <p style="font-size:13px;color:var(--muted);margin:3px 0 16px">Compartilhe e aprenda com outros jardineiros</p>
+    <button onclick="shareMyPlant()" style="width:100%;background:var(--green-light);color:white;border:none;border-radius:14px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px" class="fd">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Compartilhar minha planta
+    </button>
+  </div>
+  <div id="communityFeed" style="padding:0 16px;display:flex;flex-direction:column;gap:14px"></div>
+  <nav class="bnav">
+    <button class="nb" onclick="goTo('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Início</span></button>
+    <button class="nb" onclick="goTo('garden')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg><span>Jardim</span></button>
+    <button class="fab" onclick="goTo('scan')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="4"/></svg></button>
+    <div style="width:48px"></div>
+    <button class="nb on" onclick="goTo('community')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg><span>Comunidade</span></button>
+    <button class="nb" onclick="goTo('profile')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ═══════════ LOJA ═══════════ -->
+<div id="p-shop" class="page scroll" style="background:var(--cream);padding-bottom:80px">
+  <div style="padding:22px 16px 14px">
+    <h1 class="fd" style="font-size:26px;font-weight:700;color:var(--brown);margin:0">Loja Parceira</h1>
+    <p style="font-size:13px;color:var(--muted);margin:3px 0 16px">Compre as plantas que você escaneou</p>
+  </div>
+  <div id="shopGrid" style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+  <nav class="bnav" style="margin-top:20px">
+    <button class="nb" onclick="goTo('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Início</span></button>
+    <button class="nb" onclick="goTo('garden')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg><span>Jardim</span></button>
+    <button class="fab" onclick="goTo('scan')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="4"/></svg></button>
+    <div style="width:48px"></div>
+    <button class="nb on" onclick="goTo('shop')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg><span>Loja</span></button>
+    <button class="nb" onclick="goTo('profile')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ═══════════ PROFILE ═══════════ -->
+<div id="p-profile" class="page scroll" style="background:var(--cream);padding-bottom:80px">
+  <div style="background:linear-gradient(135deg,#0d3b22,#1a7a50);padding:28px 20px 70px;position:relative;overflow:hidden;flex-shrink:0">
+    <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:rgba(255,255,255,.04);border-radius:50%"></div>
+    <div style="position:relative;z-index:1;display:flex;align-items:center;gap:14px">
+      <div style="width:64px;height:64px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:white;border:2px solid rgba(255,255,255,.3);cursor:pointer" class="fd" onclick="editProfile()">J</div>
+      <div>
+        <h2 class="fd profile-name" style="font-size:20px;font-weight:700;color:white;margin:0;cursor:pointer" onclick="editProfile()">Jardineiro</h2>
+        <p style="font-size:12px;color:rgba(255,255,255,.65);margin:3px 0 6px">usuario@email.com</p>
+        <span style="background:rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.9);font-weight:600">🌿 Nível 2 — Jardineiro</span>
+      </div>
+    </div>
+  </div>
+  <div style="margin:-38px 16px 0;position:relative;z-index:2">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0">
+        <div style="padding:15px;text-align:center;border-right:1px solid var(--cream-dark)"><div class="fd" style="font-size:22px;font-weight:700;color:var(--green-light)">3</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Plantas</div></div>
+        <div style="padding:15px;text-align:center;border-right:1px solid var(--cream-dark)"><div class="fd scan-count" style="font-size:22px;font-weight:700;color:var(--green-light)">12</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Scans</div></div>
+        <div style="padding:15px;text-align:center"><div class="fd" style="font-size:22px;font-weight:700;color:var(--green-light)">78%</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Saúde</div></div>
+      </div>
+    </div>
+    <!-- Offline toggle -->
+    <div class="card" style="padding:14px;margin-top:10px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;background:#fff8e6;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M1 6s4-2 11-2 11 2 11 2"/><path d="M5 10s2.5-1.5 7-1.5 7 1.5 7 1.5"/><path d="M9 14s1.5-1 3-1 3 1 3 1"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>
+        <div><span class="fd" style="display:block;font-size:14px;font-weight:600;color:var(--brown)">Modo Offline</span><span style="font-size:11px;color:var(--muted)">Funciona sem internet</span></div>
+      </div>
+      <div id="offlineToggle" data-on="false" onclick="toggleOffline()" style="width:46px;height:26px;background:#ddd;border-radius:99px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0"><div class="toggle-thumb" style="width:22px;height:22px;background:white;border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div></div>
+    </div>
+    <!-- XP bar -->
+    <div class="card" style="padding:14px;margin-top:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;font-weight:600;color:var(--brown)">Progresso para Nível 3</span><span style="font-size:12px;color:var(--muted)">340 / 500 XP</span></div>
+      <div style="height:8px;background:var(--cream-dark);border-radius:4px;overflow:hidden"><div style="height:100%;width:68%;background:linear-gradient(to right,var(--green),var(--green-light));border-radius:4px"></div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;margin-top:10px">
+      <button onclick="goTo('community')" style="background:var(--white);border:1px solid var(--cream-dark);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;width:100%;box-shadow:var(--card-shadow)">
+        <div style="width:40px;height:40px;background:var(--green-bg);border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <div style="flex:1;text-align:left"><span class="fd" style="display:block;font-size:14px;font-weight:600;color:var(--brown)">Comunidade</span><span style="font-size:11px;color:var(--muted)">Ver plantas de outros usuários</span></div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c0bdb8" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <button onclick="goTo('shop')" style="background:var(--white);border:1px solid var(--cream-dark);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;width:100%;box-shadow:var(--card-shadow)">
+        <div style="width:40px;height:40px;background:var(--green-bg);border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></div>
+        <div style="flex:1;text-align:left"><span class="fd" style="display:block;font-size:14px;font-weight:600;color:var(--brown)">Loja Parceira</span><span style="font-size:11px;color:var(--muted)">Compre plantas identificadas</span></div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c0bdb8" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <button onclick="toggleSetting('notifToggle')" style="background:var(--white);border:1px solid var(--cream-dark);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;width:100%;box-shadow:var(--card-shadow)">
+        <div style="width:40px;height:40px;background:var(--green-bg);border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+        <div style="flex:1;text-align:left"><span class="fd" style="display:block;font-size:14px;font-weight:600;color:var(--brown)">Notificações</span><span style="font-size:11px;color:var(--muted)">Alertas de rega e saúde</span></div>
+        <div id="notifToggle" data-on="true" style="width:46px;height:26px;background:var(--green-light);border-radius:99px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0"><div class="toggle-thumb" style="width:22px;height:22px;background:white;border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .2s;transform:translateX(20px);box-shadow:0 1px 4px rgba(0,0,0,.2)"></div></div>
+      </button>
+      <button onclick="goTo('login')" style="background:var(--white);border:1.5px solid rgba(214,59,59,.2);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;width:100%;box-shadow:var(--card-shadow)">
+        <div style="width:40px;height:40px;background:rgba(214,59,59,.08);border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></div>
+        <span class="fd" style="font-size:14px;font-weight:600;color:var(--danger)">Sair da conta</span>
+      </button>
+    </div>
+  </div>
+  <nav class="bnav" style="margin-top:20px">
+    <button class="nb" onclick="goTo('home')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Início</span></button>
+    <button class="nb" onclick="goTo('garden')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg><span>Jardim</span></button>
+    <button class="fab" onclick="goTo('scan')"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="4"/></svg></button>
+    <div style="width:48px"></div>
+    <button class="nb" onclick="goTo('catalog')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Catálogo</span></button>
+    <button class="nb on" onclick="goTo('profile')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Perfil</span></button>
+  </nav>
+</div>
+
+<!-- ═══════════ LOGIN ═══════════ -->
+<div id="p-login" class="page" style="background:var(--white);flex-direction:column">
+  <div style="height:220px;position:relative;overflow:hidden;flex-shrink:0">
+    <img src="https://images.unsplash.com/photo-1545241047-6083a3684587?w=600&q=75" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+    <div style="position:absolute;inset:0;background:linear-gradient(170deg,rgba(8,30,16,.5),rgba(10,50,28,.88))"></div>
+    <div style="position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+      <div style="width:60px;height:60px;background:rgba(255,255,255,.15);border-radius:18px;display:flex;align-items:center;justify-content:center"><svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.5 7 4 11.5 4 14a8 8 0 0016 0C20 11.5 17.5 7 12 2z"/></svg></div>
+      <h1 class="fd" style="font-size:28px;font-weight:700;color:white;margin:0">Planta<span style="color:#7de8b8">&</span>Scan</h1>
+      <p style="font-size:13px;color:rgba(255,255,255,.65);text-align:center">Identifique, cuide e compartilhe suas plantas</p>
+    </div>
+  </div>
+  <div style="padding:26px 22px;flex:1">
+    <h2 class="fd" style="font-size:22px;font-weight:700;color:var(--brown);margin:0 0 4px">Bem-vindo de volta!</h2>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 22px">Entre para cuidar das suas plantas</p>
+    <div style="margin-bottom:14px"><label style="display:block;font-size:12px;font-weight:600;color:#5a5550;margin-bottom:6px">E-mail</label><input type="email" placeholder="seu@email.com" style="width:100%;padding:13px 16px;border:1.5px solid var(--cream-dark);border-radius:14px;font-size:14px;color:var(--brown);background:var(--cream);outline:none;box-sizing:border-box"></div>
+    <div style="margin-bottom:20px"><label style="display:block;font-size:12px;font-weight:600;color:#5a5550;margin-bottom:6px">Senha</label><input type="password" placeholder="••••••••" style="width:100%;padding:13px 16px;border:1.5px solid var(--cream-dark);border-radius:14px;font-size:14px;color:var(--brown);background:var(--cream);outline:none;box-sizing:border-box"></div>
+    <button onclick="goTo('home')" style="width:100%;background:var(--green-light);color:white;border:none;border-radius:15px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(34,196,127,.35)" class="fd">Entrar</button>
+    <div style="text-align:center;color:#c0bdb8;font-size:12px;margin:14px 0;display:flex;align-items:center;gap:10px"><div style="flex:1;height:1px;background:var(--cream-dark)"></div>ou<div style="flex:1;height:1px;background:var(--cream-dark)"></div></div>
+    <button onclick="goTo('home')" style="width:100%;background:white;color:var(--brown);border:1.5px solid var(--cream-dark);border-radius:15px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px" class="fd">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Entrar com Google
+    </button>
+  </div>
+</div>
+
+</div>
+</div>
+<style>@keyframes pulse2{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(.97)}}</style>
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let currentMode = 'identify';
+let currentImageBase64 = null;
+let isOffline = false;
+let diaryData = {
+  monstera:   [{date:'10/03',score:78,note:'Folhas novas brotando',foto:'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=200&q=70'},{date:'12/03',score:82,note:'Regada e adubada',foto:'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=200&q=70'},{date:'14/03',score:85,note:'Muito saudável!',foto:'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=200&q=70'}],
+  echeveria:  [{date:'11/03',score:90,note:'Solo seco, pronta p/ regar',foto:'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=200&q=70'},{date:'14/03',score:92,note:'Crescendo bem',foto:'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=200&q=70'}],
+  samambaia:  [{date:'09/03',score:70,note:'Folhas um pouco amarelas',foto:'https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=200&q=70'},{date:'12/03',score:62,note:'Precisa de mais umidade',foto:'https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=200&q=70'},{date:'14/03',score:58,note:'⚠ Atenção necessária',foto:'https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=200&q=70'}],
+};
+
+const catalogData = [
+  {id:'monstera',cientifico:'Monstera deliciosa',nomeLocal:'Costela-de-Adão',familia:'Araceae',categoria:['interior'],dificuldade:'Fácil',agua:'2× semana',luz:'Indireta',temp:'18–27°C',foto:'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400&q=80',cor:'#a5d6a7',curiosidade:'Os furos nas folhas são adaptações para sobreviver a ventos fortes e chuvas torrenciais na floresta tropical.',nomes:['Costela-de-Adão (BR-Sul/Sudeste)','Bananeirinha (BR-Nordeste)','Swiss Cheese Plant (EUA/UK)','Piñanona (México)','Fensterblatt (Alemanha)'],toxica:true,florescimento:'Raramente',preco:'R$ 45'},
+  {id:'echeveria',cientifico:'Echeveria elegans',nomeLocal:'Rosa-de-Pedra',familia:'Crassulaceae',categoria:['interior','suculenta'],dificuldade:'Muito fácil',agua:'1× 2 semanas',luz:'Sol direto',temp:'10–30°C',foto:'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400&q=80',cor:'#ffe0b2',curiosidade:'Armazena água nas folhas e consegue sobreviver meses sem rega. Perfeita para quem esquece.',nomes:['Suculenta / Rosa-de-pedra (BR)','Rosa de alabastro (México)','Mexican Snowball (EUA)'],toxica:false,florescimento:'Primavera',preco:'R$ 18'},
+  {id:'samambaia',cientifico:'Nephrolepis exaltata',nomeLocal:'Samambaia',familia:'Nephrolepidaceae',categoria:['interior','exterior'],dificuldade:'Moderada',agua:'Diária',luz:'Sombra parcial',temp:'15–24°C',foto:'https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=400&q=80',cor:'#b2dfdb',curiosidade:'Uma das plantas mais antigas do planeta — samambaias existem há mais de 360 milhões de anos!',nomes:['Samambaia (BR)','Avenca-grande (BR-Nordeste)','Boston Fern (EUA)'],toxica:false,florescimento:'Não floresce',preco:'R$ 28'},
+  {id:'pothos',cientifico:'Epipremnum aureum',nomeLocal:'Jiboia / Pothos',familia:'Araceae',categoria:['interior'],dificuldade:'Muito fácil',agua:'1× semana',luz:'Baixa a indireta',temp:'15–30°C',foto:'https://images.unsplash.com/photo-1611735341450-74d61e660ad2?w=400&q=80',cor:'#c8e6c9',curiosidade:'Purifica o ar removendo toxinas como formaldeído e benzeno. Ideal para escritórios.',nomes:['Jiboia / Pothos (BR)','Devil\'s Ivy (EUA/UK)','Potos (Espanha)'],toxica:true,florescimento:'Raramente',preco:'R$ 22'},
+  {id:'lavanda',cientifico:'Lavandula angustifolia',nomeLocal:'Lavanda / Alfazema',familia:'Lamiaceae',categoria:['exterior','aromatica','florida'],dificuldade:'Moderada',agua:'1× semana',luz:'Sol pleno',temp:'5–30°C',foto:'https://images.unsplash.com/photo-1468327768560-75b778cbb551?w=400&q=80',cor:'#e1bee7',curiosidade:'Utilizada há mais de 2500 anos. Os romanos a usavam para perfumar banhos e roupas.',nomes:['Lavanda / Alfazema (BR/PT)','Lavender (EUA/UK)','Lavande (França)'],toxica:false,florescimento:'Verão',preco:'R$ 32'},
+  {id:'orquidea',cientifico:'Phalaenopsis sp.',nomeLocal:'Orquídea Borboleta',familia:'Orchidaceae',categoria:['interior','florida'],dificuldade:'Moderada',agua:'1× semana',luz:'Indireta',temp:'18–28°C',foto:'https://images.unsplash.com/photo-1585320806297-9794b3e4aaae?w=400&q=80',cor:'#f8bbd0',curiosidade:'Phalaenopsis significa "semelhante a mariposa" em grego. É a orquídea mais vendida do mundo.',nomes:['Orquídea borboleta (BR)','Moth Orchid (EUA/UK)','Orchidée papillon (França)'],toxica:false,florescimento:'Inverno',preco:'R$ 55'},
+  {id:'aloe',cientifico:'Aloe vera',nomeLocal:'Babosa / Aloe Vera',familia:'Asphodelaceae',categoria:['interior','exterior','suculenta'],dificuldade:'Muito fácil',agua:'1× 2 semanas',luz:'Sol direto',temp:'10–35°C',foto:'https://images.unsplash.com/photo-1596547609652-9cf5d8c76ea2?w=400&q=80',cor:'#dcedc8',curiosidade:'Usada medicinalmente há mais de 5000 anos. O gel interno cura queimaduras e hidrata a pele.',nomes:['Babosa (BR)','Aloe vera (global)','Sábila (Espanha/México)'],toxica:false,florescimento:'Verão',preco:'R$ 15'},
+  {id:'basilico',cientifico:'Ocimum basilicum',nomeLocal:'Manjericão / Alfavaca',familia:'Lamiaceae',categoria:['interior','exterior','aromatica'],dificuldade:'Fácil',agua:'Diária',luz:'Sol direto',temp:'18–30°C',foto:'https://images.unsplash.com/photo-1618375569909-3c8616cf7733?w=400&q=80',cor:'#ccff90',curiosidade:'No Brasil é chamado de alfavaca no Nordeste e manjericão no Sudeste. Sagrado na Índia.',nomes:['Manjericão (BR-Sudeste)','Alfavaca (BR-Nordeste)','Basil (EUA/UK)','Albahaca (Espanha)'],toxica:false,florescimento:'Verão',preco:'R$ 10'},
+  {id:'cactus',cientifico:'Cereus jamacaru',nomeLocal:'Mandacaru',familia:'Cactaceae',categoria:['exterior','suculenta'],dificuldade:'Muito fácil',agua:'1× mês',luz:'Sol pleno',temp:'10–40°C',foto:'https://images.unsplash.com/photo-1520302630591-fd1737da3a40?w=400&q=80',cor:'#ffe082',curiosidade:'Símbolo do Nordeste. Armazena até 2000 litros de água em seu interior.',nomes:['Mandacaru (BR-Nordeste)','Cardeiro (BR-interior)','Cactus (global)'],toxica:false,florescimento:'Noturno',preco:'R$ 35'},
+  {id:'anthurium',cientifico:'Anthurium andraeanum',nomeLocal:'Antúrio',familia:'Araceae',categoria:['interior','florida'],dificuldade:'Moderada',agua:'2× semana',luz:'Indireta',temp:'18–28°C',foto:'https://images.unsplash.com/photo-1593482892290-f54927ae1bb6?w=400&q=80',cor:'#ef9a9a',curiosidade:'A "flor" vermelha é na verdade uma folha modificada (espata). A flor real é o spadix central.',nomes:['Antúrio (BR)','Flamingo Flower (EUA/UK)','Anturio (Espanha)'],toxica:true,florescimento:'Ano todo',preco:'R$ 42'},
+  {id:'palmeira',cientifico:'Dypsis lutescens',nomeLocal:'Palmeira Areca',familia:'Arecaceae',categoria:['interior','exterior'],dificuldade:'Fácil',agua:'2× semana',luz:'Indireta',temp:'18–30°C',foto:'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&q=80',cor:'#f9fbe7',curiosidade:'Considerada pela NASA uma das melhores plantas para purificação do ar interior.',nomes:['Palmeira-areca (BR)','Areca Palm (EUA/UK)','Palmera areca (Espanha)'],toxica:false,florescimento:'Verão',preco:'R$ 65'},
+  {id:'bromelia',cientifico:'Guzmania lingulata',nomeLocal:'Bromélia / Gravatá',familia:'Bromeliaceae',categoria:['interior','florida'],dificuldade:'Fácil',agua:'1× semana',luz:'Indireta',temp:'18–27°C',foto:'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400&q=80',cor:'#ff8a65',curiosidade:'A roseta central forma um "copo" natural que retém água. No Nordeste é chamada de gravatá.',nomes:['Bromélia (BR-Sudeste)','Gravatá (BR-Nordeste)','Bromélia (global)'],toxica:false,florescimento:'Ano todo',preco:'R$ 38'},
+];
+
+const tipData = [
+  {emoji:'💧',text:'Regue cedo pela manhã para evitar fungos nas folhas',sub:'Monsteras e Samambaias adoram manhãs úmidas.'},
+  {emoji:'☀️',text:'Luz indireta é ideal para a maioria das plantas de interior',sub:'Coloque perto de janelas com cortinas finas.'},
+  {emoji:'✂️',text:'Pode suas plantas no início da primavera',sub:'Retire folhas amarelas e galhos secos para estimular crescimento.'},
+  {emoji:'🌍',text:'Muitas plantas têm nomes diferentes por região',sub:'Costela-de-Adão no Sul, Bananeirinha no Nordeste!'},
+];
+let tipIdx = 0;
+
+const communityPosts = [
+  {user:'Maria S.',local:'São Paulo',planta:'Monstera deliciosa',nomeLocal:'Costela-de-Adão',foto:'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=300&q=70',likes:24,tempo:'2h',comentario:'Minha costela deu uma folha nova hoje! 🌿'},
+  {user:'João N.',local:'Fortaleza',planta:'Cereus jamacaru',nomeLocal:'Mandacaru',foto:'https://images.unsplash.com/photo-1520302630591-fd1737da3a40?w=300&q=70',likes:41,tempo:'5h',comentario:'Orgulho do Nordeste floresceu!'},
+  {user:'Ana R.',local:'Porto Alegre',planta:'Lavandula angustifolia',nomeLocal:'Alfazema',foto:'https://images.unsplash.com/photo-1468327768560-75b778cbb551?w=300&q=70',likes:18,tempo:'1d',comentario:'Jardim cheiroso 💜'},
+  {user:'Carlos M.',local:'Recife',planta:'Guzmania lingulata',nomeLocal:'Gravatá',foto:'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=300&q=70',likes:33,tempo:'2d',comentario:'Gravatá florindo no quintal!'},
+];
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const t = document.getElementById('p-'+page);
+  if (!t) return;
+  t.classList.add('active');
+  t.scrollTop = 0;
+  if (page==='scan') { setTimeout(()=>{ const l=document.getElementById('scanLine'); if(l) l.style.display='block'; },500); }
+  if (page==='catalog') setTimeout(renderCatalog,50);
+  if (page==='community') setTimeout(renderCommunity,50);
+  if (page==='shop') setTimeout(renderShop,50);
+}
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+function toast(msg,color){
+  const e=document.getElementById('toast');if(e)e.remove();
+  const el=document.createElement('div');el.id='toast';
+  el.textContent=msg;
+  el.style.cssText=`position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:${color||'#1c1510'};color:white;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);animation:toastIn .3s ease forwards;font-family:'DM Sans',sans-serif;max-width:320px;text-align:center`;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300);},2500);
+}
+
+// ══════════════════════════════════════════
+// SCAN MODE
+// ══════════════════════════════════════════
+function setMode(mode) {
+  currentMode = mode;
+  const ti = document.getElementById('modeIdentify');
+  const td = document.getElementById('modeDiagnose');
+  const title = document.getElementById('scanTitle');
+  const hint = document.getElementById('scanHint');
+  if (mode==='identify') {
+    ti.style.cssText='background:var(--green-light);color:white;border:none;border-radius:99px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer';
+    td.style.cssText='background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);border:none;border-radius:99px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer';
+    title.textContent='Identificar Planta';
+    hint.textContent='Centralize a planta no quadro';
+  } else {
+    td.style.cssText='background:#d63b3b;color:white;border:none;border-radius:99px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer';
+    ti.style.cssText='background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);border:none;border-radius:99px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer';
+    title.textContent='Diagnosticar Doença';
+    hint.textContent='Mostre as folhas com problemas claramente';
+  }
+}
+
+// ══════════════════════════════════════════
+// GALLERY + AI ANALYSIS
+// ══════════════════════════════════════════
+function openGallery() {
+  const input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange = e => { if(e.target.files[0]) loadImage(e.target.files[0]); };
+  input.click();
+}
+
+function loadImage(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    currentImageBase64 = ev.target.result;
+    const box = document.getElementById('camBox');
+    const ph = document.getElementById('camPlaceholder');
+    box.style.backgroundImage=`url(${currentImageBase64})`;
+    box.style.backgroundSize='cover';
+    box.style.backgroundPosition='center';
+    if(ph) ph.style.display='none';
+    toast('📷 Imagem carregada! Pressione o botão para analisar.','#1c1510');
+  };
+  reader.readAsDataURL(file);
+}
+
+function captureAndAnalyze() {
+  if (!currentImageBase64) {
+    // No image: simulate demo scan
+    runAIAnalysis(null);
+    return;
+  }
+  runAIAnalysis(currentImageBase64);
+}
+
+async function runAIAnalysis(imageBase64) {
+  const overlay = document.getElementById('scanOverlay');
+  const statusText = document.getElementById('aiStatusText');
+  const statusSub = document.getElementById('aiStatusSub');
+  const progress = document.getElementById('aiProgress');
+  overlay.style.display='flex';
+
+  // Animate progress
+  const steps = [
+    {p:15,t:'Preparando imagem...',s:'Comprimindo e enviando'},
+    {p:35,t:'Enviando para IA...',s:'Claude está analisando'},
+    {p:60,t:'Identificando espécie...',s:'Comparando com banco de dados'},
+    {p:80,t:'Avaliando saúde...',s:'Detectando possíveis problemas'},
+    {p:95,t:'Finalizando análise...',s:'Preparando resultado'},
+  ];
+  for (const s of steps) {
+    statusText.textContent = s.t;
+    statusSub.textContent = s.s;
+    progress.style.width = s.p+'%';
+    await new Promise(r => setTimeout(r,350));
+  }
+
+  if (isOffline || !imageBase64) {
+    // Offline: use cached result
+    overlay.style.display='none';
+    currentImageBase64=null;
+    resetCamBox();
+    showPlantResult({
+      name:'Monstera', sci:'Monstera deliciosa', score:85,
+      foto:'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=800&q=85',
+      aiNote:'[Modo offline — resultado do cache local]',
+      issues:[], actions:[]
+    });
+    toast('📵 Resultado do cache offline','#e0780d');
+    return;
+  }
+
+  try {
+    const prompt = currentMode==='identify'
+      ? `Você é um especialista em botânica. Analise esta imagem e identifique a planta. Responda APENAS em JSON válido sem markdown:
+{"name":"nome popular em português","sci":"nome científico","family":"família botânica","score":85,"confidence":97,"light":"necessidade de luz","water":"frequência de rega","temp":"faixa de temperatura","summary":"descrição de 2 frases","nomeNordeste":"nome no Nordeste do Brasil se diferente","nomeSudeste":"nome no Sudeste do Brasil","nameEnglish":"nome em inglês","nameMexico":"nome no México se aplicável","issues":[{"label":"problema se houver","desc":"descrição","severity":"warn"}],"actions":[{"icon":"💧","label":"ação","desc":"descrição"}],"tip":"dica especial da IA"}`
+      : `Você é um fitopatologista. Diagnostique os problemas desta planta. Responda APENAS em JSON:
+{"name":"espécie identificada","sci":"nome científico","score":45,"confidence":88,"diagnosis":"diagnóstico principal","issues":[{"label":"problema","desc":"descrição detalhada","severity":"alert"}],"treatment":"tratamento recomendado","actions":[{"icon":"🌿","label":"ação","desc":"descrição"}],"tip":"dica de prevenção"}`;
+
+    const body = {
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:'image/jpeg',data:imageBase64.split(',')[1]||imageBase64}},
+        {type:'text',text:prompt}
+      ]}]
+    };
+
+    progress.style.width='99%';
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const data = await resp.json();
+    const raw = data.content?.[0]?.text || '{}';
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g,'')); }
+    catch { parsed = {name:'Planta identificada',sci:'Espécie detectada',score:75,tip:'Análise concluída pela IA.'}; }
+
+    overlay.style.display='none';
+    currentImageBase64=null;
+    resetCamBox();
+
+    showPlantResult({
+      name: parsed.name||'Planta',
+      sci: parsed.sci||'',
+      score: parsed.score||75,
+      confidence: parsed.confidence||90,
+      foto: imageBase64,
+      family: parsed.family||'',
+      light: parsed.light||'',
+      water: parsed.water||'',
+      temp: parsed.temp||'',
+      summary: parsed.summary||parsed.diagnosis||'',
+      nomeNordeste: parsed.nomeNordeste||'',
+      nomeSudeste: parsed.nomeSudeste||'',
+      nameEnglish: parsed.nameEnglish||'',
+      nameMexico: parsed.nameMexico||'',
+      issues: parsed.issues||[],
+      actions: parsed.actions||[],
+      tip: parsed.tip||'',
+      treatment: parsed.treatment||'',
+      aiNote: currentMode==='diagnose' ? '🔬 Diagnóstico realizado pela IA' : '🤖 Identificação pela Claude AI',
+    });
+    toast(`✅ ${currentMode==='identify'?'Identificada':'Diagnóstico pronto'}: ${parsed.name||'Planta'}!`, '#1a9e6a');
+
+    // Update scan counter
+    document.querySelectorAll('.scan-count').forEach(c=>{ c.textContent=String(parseInt(c.textContent||'12')+1); });
+
+  } catch(err) {
+    overlay.style.display='none';
+    currentImageBase64=null;
+    resetCamBox();
+    toast('❌ Erro na análise. Tente novamente.','#d63b3b');
+  }
+}
+
+function resetCamBox() {
+  const box=document.getElementById('camBox');
+  const ph=document.getElementById('camPlaceholder');
+  box.style.backgroundImage='';
+  if(ph) ph.style.display='flex';
+}
+
+// ══════════════════════════════════════════
+// RESULT PAGE
+// ══════════════════════════════════════════
+function showPlantResult(data) {
+  const scoreColor = data.score>=75?'var(--green-light)':data.score>=50?'var(--warn)':'var(--danger)';
+  const scoreLabel = data.score>=75?'Saudável':data.score>=50?'Atenção':'Crítico';
+  const dashoffset = 251.3 - (data.score/100)*251.3;
+
+  const issuesHtml = data.issues&&data.issues.length>0 ? `
+    <h2 class="fd" style="font-size:17px;font-weight:600;color:var(--brown);margin:16px 0 10px;display:flex;align-items:center;gap:7px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Problemas Detectados
+    </h2>
+    ${data.issues.map(i=>`<div style="background:${i.severity==='alert'?'#fef0f0':'#fff8ee'};border:1px solid ${i.severity==='alert'?'rgba(214,59,59,.2)':'rgba(224,120,13,.2)'};border-radius:14px;padding:13px;margin-bottom:8px;display:flex;gap:12px">
+      <div style="font-size:22px;flex-shrink:0">${i.severity==='alert'?'🚨':'⚠️'}</div>
+      <div><p class="fd" style="font-size:13px;font-weight:600;color:var(--brown);margin:0">${i.label}</p><p style="font-size:11px;color:var(--muted);margin:3px 0 0;line-height:1.4">${i.desc}</p></div>
+    </div>`).join('')}` : `<div style="background:var(--green-bg);border-radius:14px;padding:13px;margin-top:12px;display:flex;align-items:center;gap:10px"><div style="font-size:22px">✅</div><p style="font-size:13px;color:var(--green-dark);font-weight:500;margin:0">Nenhum problema detectado. Planta saudável!</p></div>`;
+
+  const nomesHtml = (data.nomeNordeste||data.nomeSudeste||data.nameEnglish) ? `
+    <div style="background:var(--white);border-radius:18px;padding:16px;margin-top:12px;box-shadow:var(--card-shadow)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:18px">🌍</span>
+        <p class="fd" style="font-size:14px;font-weight:700;color:var(--brown);margin:0">Nomes por região</p>
+      </div>
+      ${data.nomeNordeste?`<div style="display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--cream-dark)"><span style="font-size:11px;background:#e6f7f0;color:var(--green-dark);padding:2px 8px;border-radius:6px;flex-shrink:0">Nordeste BR</span><span style="font-size:13px;color:var(--brown)">${data.nomeNordeste}</span></div>`:''}
+      ${data.nomeSudeste?`<div style="display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--cream-dark)"><span style="font-size:11px;background:#e6f7f0;color:var(--green-dark);padding:2px 8px;border-radius:6px;flex-shrink:0">Sudeste BR</span><span style="font-size:13px;color:var(--brown)">${data.nomeSudeste}</span></div>`:''}
+      ${data.nameEnglish?`<div style="display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--cream-dark)"><span style="font-size:11px;background:#e8f0fe;color:#1a4fa0;padding:2px 8px;border-radius:6px;flex-shrink:0">🇺🇸 English</span><span style="font-size:13px;color:var(--brown)">${data.nameEnglish}</span></div>`:''}
+      ${data.nameMexico?`<div style="display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--cream-dark)"><span style="font-size:11px;background:#fff8e1;color:#7a5000;padding:2px 8px;border-radius:6px;flex-shrink:0">🇲🇽 México</span><span style="font-size:13px;color:var(--brown)">${data.nameMexico}</span></div>`:''}
+    </div>` : '';
+
+  document.getElementById('resultContent').innerHTML = `
+    <div style="position:relative;height:250px;flex-shrink:0">
+      <img src="${data.foto||'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=800&q=85'}" style="width:100%;height:100%;object-fit:cover">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,var(--cream) 0%,transparent 55%)"></div>
+      <button onclick="goTo('scan')" style="position:absolute;top:16px;left:16px;width:42px;height:42px;background:rgba(255,255,255,.88);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1c1510" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      ${data.confidence?`<div style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.9);border-radius:12px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--green-dark)">🤖 ${data.confidence}% confiança</div>`:''}
+    </div>
+    <div style="padding:0 16px;margin-top:-50px;position:relative;z-index:2">
+      <div class="card pop" style="padding:18px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="flex:1">
+            ${data.family?`<div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">${data.family}</div>`:''}
+            <h1 class="fd" style="font-size:24px;font-weight:700;color:var(--brown);margin:0">${data.name}</h1>
+            <p style="font-size:12px;color:var(--muted);font-style:italic;margin:3px 0 10px">${data.sci}</p>
+            ${data.aiNote?`<span style="font-size:11px;background:var(--green-bg);color:var(--green-dark);padding:3px 10px;border-radius:20px;font-weight:600">${data.aiNote}</span>`:''}
+          </div>
+          <div style="position:relative;width:84px;height:84px;flex-shrink:0">
+            <svg width="84" height="84" viewBox="0 0 100 100" style="transform:rotate(-90deg)">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="var(--cream-dark)" stroke-width="11"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="${scoreColor}" stroke-width="11" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="${dashoffset}" style="transition:stroke-dashoffset 1.2s ease"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <span class="fd" style="font-size:22px;font-weight:700;color:var(--brown)">${data.score}</span>
+              <span style="font-size:9px;color:var(--muted)">${scoreLabel}</span>
+            </div>
+          </div>
+        </div>
+        ${data.summary?`<p style="font-size:12px;color:var(--muted);line-height:1.6;margin:12px 0 0;padding-top:12px;border-top:1px solid var(--cream-dark)">${data.summary}</p>`:''}
+        ${(data.light||data.water)?`<div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap">
+          ${data.light?`<span class="pill pill-g">☀ ${data.light}</span>`:''}
+          ${data.water?`<span class="pill pill-g">💧 ${data.water}</span>`:''}
+          ${data.temp?`<span class="pill pill-g">🌡 ${data.temp}</span>`:''}
+        </div>`:''}
+      </div>
+      ${issuesHtml}
+      ${nomesHtml}
+      ${data.tip?`<div style="background:linear-gradient(135deg,#0d3b22,#1a7a50);border-radius:18px;padding:16px;margin-top:12px;display:flex;gap:13px;align-items:flex-start">
+        <div style="font-size:24px;flex-shrink:0">💡</div>
+        <div><p class="fd" style="font-size:13px;font-weight:700;color:white;margin:0 0 4px">Dica da IA</p><p style="font-size:12px;color:rgba(255,255,255,.75);line-height:1.5;margin:0">${data.tip}</p></div>
+      </div>`:''}
+      <button onclick="goTo('garden')" style="width:100%;background:var(--green-light);color:white;border:none;border-radius:16px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;box-shadow:0 8px 24px rgba(34,196,127,.35)" class="fd">Salvar no Meu Jardim</button>
+      <button onclick="goTo('scan')" style="width:100%;background:var(--white);color:var(--green);border:1.5px solid var(--green-light);border-radius:16px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px" class="fd">📷 Escanear outra planta</button>
+    </div>`;
+  goTo('result');
+}
+
+// ══════════════════════════════════════════
+// DIARY
+// ══════════════════════════════════════════
+function openDiary(plantId) {
+  const names={monstera:'Monstera',echeveria:'Suculenta',samambaia:'Samambaia'};
+  const fotos={monstera:'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400&q=80',echeveria:'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400&q=80',samambaia:'https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=400&q=80'};
+  document.getElementById('diaryTitle').textContent = `📔 ${names[plantId]||plantId}`;
+  const entries = diaryData[plantId]||[];
+  const first=entries[0]?.score||0, last=entries[entries.length-1]?.score||0;
+  const trend = last>first?`↑ +${last-first} pts`:(last<first?`↓ ${last-first} pts`:'= estável');
+  const trendColor = last>first?'var(--green)':last<first?'var(--danger)':'var(--muted)';
+  document.getElementById('diaryContent').innerHTML = `
+    <!-- trend -->
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <div style="flex:1;background:var(--white);border-radius:14px;padding:13px;text-align:center;box-shadow:var(--card-shadow)">
+        <div class="fd" style="font-size:22px;font-weight:700;color:var(--green-light)">${last}</div>
+        <div style="font-size:10px;color:var(--muted)">Saúde atual</div>
+      </div>
+      <div style="flex:1;background:var(--white);border-radius:14px;padding:13px;text-align:center;box-shadow:var(--card-shadow)">
+        <div class="fd" style="font-size:18px;font-weight:700;color:${trendColor}">${trend}</div>
+        <div style="font-size:10px;color:var(--muted)">Evolução</div>
+      </div>
+      <div style="flex:1;background:var(--white);border-radius:14px;padding:13px;text-align:center;box-shadow:var(--card-shadow)">
+        <div class="fd" style="font-size:22px;font-weight:700;color:var(--green-light)">${entries.length}</div>
+        <div style="font-size:10px;color:var(--muted)">Registros</div>
+      </div>
+    </div>
+    <!-- health chart -->
+    <div style="background:var(--white);border-radius:16px;padding:14px;margin-bottom:14px;box-shadow:var(--card-shadow)">
+      <p class="fd" style="font-size:13px;font-weight:600;color:var(--brown);margin:0 0 12px">Evolução da Saúde</p>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:60px">
+        ${entries.map(e=>{
+          const h=Math.round((e.score/100)*60);
+          const c=e.score>=75?'var(--green-light)':e.score>=50?'var(--warn)':'var(--danger)';
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="font-size:10px;color:var(--muted);font-weight:600">${e.score}</div>
+            <div style="width:100%;height:${h}px;background:${c};border-radius:6px 6px 0 0;min-height:8px"></div>
+            <div style="font-size:9px;color:var(--muted)">${e.date}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <!-- timeline -->
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:14px">
+      ${entries.slice().reverse().map((e,i)=>`
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:44px;height:44px;border-radius:12px;overflow:hidden;flex-shrink:0"><img src="${e.foto}" style="width:100%;height:100%;object-fit:cover"></div>
+          <div style="flex:1;background:var(--white);border-radius:14px;padding:11px;box-shadow:var(--card-shadow)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <span style="font-size:11px;color:var(--muted)">${e.date}</span>
+              <span style="font-size:11px;font-weight:700;color:${e.score>=75?'var(--green)':e.score>=50?'var(--warn)':'var(--danger)'}">${e.score}/100</span>
+            </div>
+            <p style="font-size:13px;color:var(--brown);margin:0">${e.note}</p>
+          </div>
+        </div>`).join('')}
+    </div>
+    <!-- add entry -->
+    <button onclick="addDiaryEntry('${plantId}')" style="width:100%;background:var(--green-light);color:white;border:none;border-radius:14px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(34,196,127,.35)" class="fd">
+      + Adicionar Registro de Hoje
+    </button>`;
+  goTo('diary');
+}
+
+function addDiaryEntry(plantId) {
+  const note = prompt('Como está sua planta hoje?','Tudo bem, crescendo!');
+  if (!note) return;
+  const today = new Date();
+  const dateStr = `${today.getDate().toString().padStart(2,'0')}/${(today.getMonth()+1).toString().padStart(2,'0')}`;
+  const fotos={monstera:'https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=200&q=70',echeveria:'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=200&q=70',samambaia:'https://images.unsplash.com/photo-1597305877032-0668b3c6413a?w=200&q=70'};
+  const last = diaryData[plantId]?.[diaryData[plantId].length-1]?.score||80;
+  diaryData[plantId] = diaryData[plantId]||[];
+  diaryData[plantId].push({date:dateStr,score:Math.min(100,last+Math.floor(Math.random()*6)-2),note,foto:fotos[plantId]||''});
+  openDiary(plantId);
+  toast('📔 Registro adicionado!','#1a9e6a');
+}
+
+// ══════════════════════════════════════════
+// CATALOG
+// ══════════════════════════════════════════
+let catalogFilter='todas', catalogSearch='';
+function renderCatalog() {
+  const grid=document.getElementById('catalogGrid');
+  if(!grid) return;
+  const filtered=catalogData.filter(p=>{
+    const matchCat=catalogFilter==='todas'||p.categoria.includes(catalogFilter);
+    const q=catalogSearch.toLowerCase();
+    const matchQ=!q||p.nomeLocal.toLowerCase().includes(q)||p.cientifico.toLowerCase().includes(q)||p.nomes.some(n=>n.toLowerCase().includes(q));
+    return matchCat&&matchQ;
+  });
+  if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Nenhuma planta encontrada 🌿</div>`;return;}
+  grid.innerHTML=filtered.map(p=>`
+    <div onclick="openCatalogDetail('${p.id}')" style="background:var(--white);border-radius:18px;overflow:hidden;box-shadow:var(--card-shadow);cursor:pointer">
+      <div style="height:130px;position:relative;overflow:hidden">
+        <img src="${p.foto}" alt="${p.nomeLocal}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.background='${p.cor}'">
+        <div style="position:absolute;top:8px;left:8px;background:rgba(255,255,255,.92);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:${p.dificuldade==='Muito fácil'?'#0a7a4d':p.dificuldade==='Fácil'?'#1a9e6a':p.dificuldade==='Moderada'?'#e07b1a':'#d63b3b'}">${p.dificuldade}</div>
+        ${p.toxica?'<div style="position:absolute;top:8px;right:8px;background:rgba(214,59,59,.88);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:700;color:white">⚠ Tóxica</div>':''}
+      </div>
+      <div style="padding:11px 12px 13px">
+        <div class="fd" style="font-size:14px;font-weight:700;color:var(--brown)">${p.nomeLocal}</div>
+        <div style="font-size:10px;color:var(--muted);font-style:italic;margin-top:1px">${p.cientifico}</div>
+        <div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap">
+          <span style="font-size:10px;color:var(--green-dark);background:var(--green-bg);padding:2px 7px;border-radius:6px">💧 ${p.agua}</span>
+          <span style="font-size:10px;color:#7a5a0d;background:#fff8e1;padding:2px 7px;border-radius:6px">☀ ${p.luz}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function filterCategory(cat){
+  catalogFilter=cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>{
+    const active=(cat==='todas'&&b.textContent==='Todas')||(cat!=='todas'&&b.textContent.toLowerCase().includes(cat.replace('todas','')));
+    b.style.background=active?'var(--green-light)':'var(--white)';
+    b.style.color=active?'white':'var(--muted)';
+    b.style.border=active?'none':'1.5px solid var(--cream-dark)';
+  });
+  renderCatalog();
+}
+function filterCatalog(q){catalogSearch=q;renderCatalog();}
+function openCatalogDetail(id){
+  const p=catalogData.find(x=>x.id===id);
+  if(!p) return;
+  showPlantResult({name:p.nomeLocal,sci:p.cientifico,score:85,foto:p.foto,family:p.familia,light:p.luz,water:p.agua,temp:p.temp,summary:p.curiosidade,nomes:p.nomes,issues:[],actions:[],tip:`Esta planta é classificada como "${p.dificuldade}" para cultivar. Florescimento: ${p.florescimento}.`});
+}
+
+// ══════════════════════════════════════════
+// COMMUNITY
+// ══════════════════════════════════════════
+function renderCommunity(){
+  const feed=document.getElementById('communityFeed');
+  if(!feed) return;
+  feed.innerHTML=communityPosts.map(p=>`
+    <div style="background:var(--white);border-radius:18px;overflow:hidden;box-shadow:var(--card-shadow)">
+      <div style="height:160px;overflow:hidden"><img src="${p.foto}" style="width:100%;height:100%;object-fit:cover"></div>
+      <div style="padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:9px">
+            <div style="width:34px;height:34px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--green-dark)" class="fd">${p.user[0]}</div>
+            <div><div class="fd" style="font-size:13px;font-weight:600;color:var(--brown)">${p.user}</div><div style="font-size:10px;color:var(--muted)">📍 ${p.local} · ${p.tempo}</div></div>
+          </div>
+          <span class="pill pill-g" style="font-size:10px">${p.nomeLocal}</span>
+        </div>
+        <p style="font-size:13px;color:var(--brown);margin:0 0 10px">${p.comentario}</p>
+        <div style="display:flex;gap:10px">
+          <button onclick="likePosta(this,${p.likes})" style="display:flex;align-items:center;gap:5px;background:var(--cream);border:none;border-radius:99px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--muted);font-weight:600">❤️ ${p.likes}</button>
+          <button onclick="toast('💬 Comentários em breve!','#1c1510')" style="display:flex;align-items:center;gap:5px;background:var(--cream);border:none;border-radius:99px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--muted);font-weight:600">💬 Comentar</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function likePosta(btn,orig){
+  const liked=btn.dataset.liked==='true';
+  btn.dataset.liked=String(!liked);
+  btn.textContent=`❤️ ${liked?orig:orig+1}`;
+  btn.style.color=liked?'var(--muted)':'var(--danger)';
+  btn.style.background=liked?'var(--cream)':'#fef0f0';
+}
+function shareMyPlant(){
+  toast('🌿 Foto compartilhada com a comunidade!','#1a9e6a');
+  const feed=document.getElementById('communityFeed');
+  if(!feed) return;
+  const div=document.createElement('div');
+  div.style.cssText='background:var(--white);border-radius:18px;overflow:hidden;box-shadow:var(--card-shadow);animation:slideUp .4s ease forwards';
+  div.innerHTML=`<div style="height:120px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:50px">🌿</div><div style="padding:14px"><div class="fd" style="font-size:13px;font-weight:600;color:var(--brown)">Você</div><p style="font-size:13px;color:var(--brown);margin:6px 0 0">Minha planta favorita! 🌱</p></div>`;
+  feed.prepend(div);
+}
+
+// ══════════════════════════════════════════
+// SHOP
+// ══════════════════════════════════════════
+function renderShop(){
+  const grid=document.getElementById('shopGrid');
+  if(!grid) return;
+  grid.innerHTML=catalogData.map(p=>`
+    <div style="background:var(--white);border-radius:18px;overflow:hidden;box-shadow:var(--card-shadow)">
+      <div style="height:110px;overflow:hidden;position:relative">
+        <img src="${p.foto}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.background='${p.cor}'">
+        ${p.toxica?'<div style="position:absolute;top:6px;right:6px;background:rgba(214,59,59,.85);border-radius:6px;padding:2px 6px;font-size:9px;color:white;font-weight:700">⚠ Tóxica</div>':''}
+      </div>
+      <div style="padding:10px 11px 12px">
+        <div class="fd" style="font-size:13px;font-weight:700;color:var(--brown)">${p.nomeLocal}</div>
+        <div style="font-size:10px;color:var(--muted);font-style:italic">${p.cientifico}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+          <span class="fd" style="font-size:15px;font-weight:700;color:var(--green-dark)">${p.preco}</span>
+          <button onclick="addToCart('${p.nomeLocal}')" style="background:var(--green-light);color:white;border:none;border-radius:9px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer">+ Comprar</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function addToCart(name){toast(`🛒 ${name} adicionada ao carrinho!`,'#1a9e6a');}
+
+// ══════════════════════════════════════════
+// WATERING CALCULATOR
+// ══════════════════════════════════════════
+function calcWatering(){
+  const soil=parseInt(document.getElementById('soilType').value);
+  const weather=new Date().getMonth()>=10||new Date().getMonth()<=2?'verão':'inverno';
+  const freq=weather==='verão'?Math.max(1,soil-1):soil+1;
+  const msg=freq<=1?'A cada 1 dia (solo seca muito rápido!)':freq<=3?`A cada ${freq} dias`:freq<=7?`A cada ${freq} dias (aprox. ${Math.round(7/freq)}× por semana)`:`A cada ${freq} dias (${Math.round(30/freq)}× por mês)`;
+  document.getElementById('waterCalcResult').innerHTML=`<strong>💧 Frequência ideal: ${msg}</strong><br><span style="font-size:11px;color:var(--muted)">Considerando ${weather} e seu tipo de solo</span>`;
+  toast('💧 Frequência calculada!','#1a9e6a');
+}
+
+// ══════════════════════════════════════════
+// OFFLINE MODE
+// ══════════════════════════════════════════
+function toggleOffline(){
+  isOffline=!isOffline;
+  const el=document.getElementById('offlineToggle');
+  const badge=document.getElementById('offlineBadge');
+  el.dataset.on=String(isOffline);
+  el.style.background=isOffline?'var(--warn)':'#ddd';
+  el.querySelector('.toggle-thumb').style.transform=isOffline?'translateX(20px)':'translateX(2px)';
+  badge.style.display=isOffline?'block':'none';
+  toast(isOffline?'📵 Modo offline ativado — usando cache local':'🌐 Modo online restaurado', isOffline?'#e0780d':'#1a9e6a');
+}
+window.addEventListener('online',()=>{if(!isOffline){toast('🌐 Conexão restaurada!','#1a9e6a');}});
+window.addEventListener('offline',()=>{isOffline=true;document.getElementById('offlineBadge').style.display='block';toast('📵 Sem conexão — modo offline ativado','#e0780d');});
+
+// ══════════════════════════════════════════
+// TIPS
+// ══════════════════════════════════════════
+function nextTip(){
+  tipIdx=(tipIdx+1)%tipData.length;
+  const t=tipData[tipIdx];
+  const card=document.getElementById('tipCard');
+  card.style.opacity='0';
+  setTimeout(()=>{
+    document.getElementById('tipText').textContent=t.text;
+    document.getElementById('tipEmoji').textContent=t.emoji;
+    document.getElementById('tipIcon').textContent=t.emoji;
+    document.getElementById('tipSub').textContent='Toque para próxima dica';
+    const dots=document.getElementById('tipDots').children;
+    for(let i=0;i<dots.length;i++){
+      dots[i].style.width=i===tipIdx?'20px':'6px';
+      dots[i].style.opacity=i===tipIdx?'0.7':'0.3';
+    }
+    card.style.opacity='1';
+  },200);
+  card.style.transition='opacity .2s';
+}
+function showAITips(){
+  const tips=['🌿 Monsteras preferem solo bem drenado.','💧 Regue quando o solo estiver seco a 2cm.','☀️ Evite luz solar direta em plantas tropicais.','🌡️ Mantenha temperatura acima de 15°C.','✂️ Pode folhas amarelas para estimular crescimento.','🪲 Verifique sob as folhas para detectar pragas cedo.'];
+  toast(tips[Math.floor(Math.random()*tips.length)],'#0d6b47');
+}
+
+// ══════════════════════════════════════════
+// MISC
+// ══════════════════════════════════════════
+function markWatered(id){
+  const b=document.getElementById(id);
+  if(!b||b.disabled) return;
+  b.textContent='✓ Regado'; b.style.background='#a0c8b0'; b.disabled=true;
+  toast('💧 Ótimo! Planta regada com sucesso.','#1a9e6a');
+}
+function toggleSetting(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const on=el.dataset.on==='true';
+  el.dataset.on=String(!on);
+  el.style.background=!on?'var(--green-light)':'#ddd';
+  el.querySelector('.toggle-thumb').style.transform=!on?'translateX(20px)':'translateX(2px)';
+  toast(!on?'🔔 Notificações ativadas':'🔕 Notificações desativadas','#1c1510');
+}
+function editProfile(){
+  const n=prompt('Novo nome:','Jardineiro');
+  if(n){document.querySelectorAll('.profile-name').forEach(e=>e.textContent=n);toast('✅ Perfil atualizado!','#1a9e6a');}
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  renderCatalog();
+  renderCommunity();
+  renderShop();
+});
+</script>
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+</body>
+</html>

@@ -1,34 +1,56 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
+/* PlantaScan - App Styles */
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
-}
-
-.App-header {
-    background-color: #0f0f10;
+.app-container {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+    min-height: 100dvh;
+    position: relative;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
-.App-link {
-    color: #61dafb;
+.page-content {
+    padding-bottom: 5rem;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Health status colors */
+.health-healthy { color: #059669; background: #ecfdf5; }
+.health-needs_attention { color: #d97706; background: #fffbeb; }
+.health-critical { color: #dc2626; background: #fef2f2; }
+
+/* Reminder type icons colors */
+.reminder-water { color: #3b82f6; }
+.reminder-fertilize { color: #8b5cf6; }
+.reminder-prune { color: #f59e0b; }
+.reminder-repot { color: #ef4444; }
+.reminder-rotate { color: #06b6d4; }
+.reminder-clean { color: #10b981; }
+
+/* Card hover effect */
+.plant-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.plant-card:active {
+    transform: scale(0.97);
+}
+
+/* Pulse animation for pending reminders */
+@keyframes gentlePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+.pulse-gentle {
+    animation: gentlePulse 2s ease-in-out infinite;
+}
+
+/* Tab indicator */
+.tab-active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #1C3F2A;
 }

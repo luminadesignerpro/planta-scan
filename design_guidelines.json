@@ -1,0 +1,111 @@
+{
+  "theme": "light",
+  "archetype": "1 (Organic & Earthy)",
+  "typography": {
+    "fonts": {
+      "headings": "Cormorant Garamond",
+      "body": "Figtree"
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl tracking-tight leading-none",
+      "h2": "text-2xl sm:text-3xl tracking-tight",
+      "h3": "text-xl font-medium",
+      "body": "text-base leading-relaxed",
+      "label": "text-xs tracking-[0.2em] uppercase font-bold"
+    }
+  },
+  "colors": {
+    "background": {
+      "base": "#F9F8F6",
+      "surface": "#FFFFFF",
+      "surface_alt": "#EEF2EB",
+      "nav": "rgba(255, 255, 255, 0.85)"
+    },
+    "brand": {
+      "primary": "#1C3F2A",
+      "secondary": "#8FA290",
+      "accent": "#B85C38"
+    },
+    "text": {
+      "primary": "#101813",
+      "secondary": "#4A5D4E",
+      "muted": "#8B9D8E"
+    },
+    "borders": {
+      "subtle": "#E5EBE5",
+      "active": "#1C3F2A"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous Spacing, Optical Alignment over Geometric",
+    "paddings": {
+      "container": "p-6",
+      "card": "p-6 sm:p-8",
+      "button": "px-6 py-3"
+    },
+    "border_radius": "rounded-3xl",
+    "grid_strategy": "bento",
+    "mobile_first": true
+  },
+  "components": {
+    "bottom_navigation": {
+      "style": "glassmorphism",
+      "classes": "fixed bottom-0 w-full backdrop-blur-xl bg-white/85 border-t border-[#E5EBE5] pb-safe z-50",
+      "active_state": "text-[#1C3F2A]",
+      "inactive_state": "text-[#8B9D8E]"
+    },
+    "scan_button": {
+      "style": "floating_action",
+      "classes": "bg-[#1C3F2A] text-white rounded-full p-4 shadow-lg transform -translate-y-4"
+    },
+    "cards": {
+      "style": "neumorphism_light",
+      "classes": "bg-white rounded-3xl border border-[#E5EBE5] shadow-sm hover:shadow-md transition-shadow"
+    },
+    "pills": {
+      "style": "solid_soft",
+      "classes": "bg-[#EEF2EB] text-[#1C3F2A] px-4 py-2 rounded-full text-sm font-medium"
+    }
+  },
+  "motion": {
+    "transitions": "transition-all duration-300 ease-out",
+    "hover": "hover:-translate-y-1 hover:shadow-lg",
+    "bottom_sheet": "animate-in slide-in-from-bottom duration-300"
+  },
+  "media": [
+    {
+      "category": "hero_empty_state",
+      "url": "https://static.prod-images.emergentagent.com/jobs/dffe6d62-58d4-4fa8-96ff-221942317b91/images/4a5858344b90fe7ac0aaeb73253b92b68104fb018c368b786dabd1dddace4d67.png",
+      "description": "Illustration for empty plant collection or scanning hero"
+    },
+    {
+      "category": "success_empty_state",
+      "url": "https://static.prod-images.emergentagent.com/jobs/dffe6d62-58d4-4fa8-96ff-221942317b91/images/ebc9953cbcfb6f7420e856384bee4c027acd2b1dab0caebe8b4729765e5a6ece.png",
+      "description": "Illustration for healthy plant status or onboarding success"
+    },
+    {
+      "category": "mock_plant_monstera",
+      "url": "https://images.unsplash.com/photo-1701270631123-6374edb1e337?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzl8MHwxfHNlYXJjaHwxfHxwb3R0ZWQlMjBtb25zdGVyYSUyMGluZG9vcnxlbnwwfHx8fDE3NzYwMTg1MzN8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Mock image for a healthy Monstera plant in collection"
+    },
+    {
+      "category": "mock_disease_leaf",
+      "url": "https://images.pexels.com/photos/7124505/pexels-photo-7124505.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Mock image for a scan result showing brown spots/disease"
+    }
+  ],
+  "accessibility_and_testing": {
+    "contrast": "Ensure APCA contrast ratio. Text on dark green must be white. Dark text on bone white.",
+    "data_testid": "MANDATORY on all buttons, tabs, links, forms, e.g., 'scan-camera-button', 'nav-reminders-tab', 'plant-card-monstera'"
+  },
+  "instructions_to_main_agent": [
+    "Build a mobile-first web app with a fixed bottom navigation bar (lucide-react icons: Scan, Library, Bell, History).",
+    "Use pure HTML+Tailwind for app layouts, and Shadcn UI for complex interactives (Dialog for scan results, Drawer/Sheet for plant details).",
+    "Never use Inter or Roboto. Install and use Cormorant Garamond for main headings (text-4xl to text-5xl tracking-tight) and Figtree for body and UI elements.",
+    "Implement generously spaced bento-style cards for the Plant Details view. Include big padded areas (p-6) to let content breathe.",
+    "The camera UI should simulate a viewfinder overlay. When scanned, slide up a bottom sheet with the AI identification result.",
+    "Use the provided image URLs as mock data for 'My Plants', 'Recent Scans', and Empty states.",
+    "Adhere strictly to the color palette: Bone White (#F9F8F6) background, Deep Forest Green (#1C3F2A) for primary elements, and Terracotta (#B85C38) for urgent reminders like 'Needs Water Now'.",
+    "CRITICAL: Add `data-testid` attributes to all interactive elements for testing."
+  ]
+}
